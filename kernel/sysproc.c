@@ -106,3 +106,17 @@ sys_memsize(void)
 {
   return myproc()->sz;
 }
+
+// Set the affinity of the process to the given mask.
+// If the mask is negative, return -1.
+uint64
+sys_setaffinity(void)
+{
+  int mask;
+  argint(0, &mask);
+  if (mask >= 0) {
+    myproc()->affinity_mask = mask;
+    return 0;
+  }
+  return -1;
+}
