@@ -68,3 +68,27 @@ That is, a process will complete it's CPU burst before scheduling.
 
 ### Q4
 When a process calls the `sleep()` system call, its state is changing from *RUNNING* to *SLEEPING*, and then scheduling is performed to let other processes run in the meanwhile. When the process state will be *RUNNABLE* (for instance, if the user invoked the `wakeup()` system call), the process will get again the CPU time, and the sleep function will clean up.
+
+## Task 6
+### Q1
+In the `kernel/proc.c` file.
+
+### Q2
+The `yield()` function calls the `sched()`. Inside the `sched()` there is a call to `swtch(&p->context, &mycpu()->context);` where we save the running proccess memory and we load the cpu context which is the scheduler program. Then, the cpu continues inside the scheduler loop.
+
+### Q3
+There are 3 places where `sched()` is called in XV6.
+  1. In the `yield()` function.
+  2. In the `exit()` system call.
+  3. In the `sleep()` system call. 
+The difference is that `exit()` and `sleep()` are system calls that the user initiates when `yield()` is an internal action of the operating system.
+
+### Q4
+In the `yield()` function we check if the proccess has an affinity mask and can run only on specific CPUs. If so, we update the effictive affinity mask by removing the current cpu from it. If after the removal there are no cpus to run on, we reset the effective affinity mask back to the original.
+
+In the scheduler, we run a proccess if the state is `RUNNABLE` and if there is no affinity mask or the CPU is included in the effective affinity mask.
+
+### Q5
+Without the mechanism the proccess can't decide which CPU to run on in a multicore machine. This is because there is no record which CPU to run on.
+
+Yes, it can set its affinity mask to run on a specific CPU using `setaffinity(1 << cpuid)` system call.

@@ -127,6 +127,7 @@ exec(char *path, char **argv)
   p->trapframe->epc = elf.entry;  // initial program counter = main
   p->trapframe->sp = sp; // initial stack pointer
   p->affinity_mask = 0; // default affinity mask - can run on any cpu
+  p->effective_affinity_mask = 0; // default effective affinity mask - can run on any cpu
   proc_freepagetable(oldpagetable, oldsz);
 
   return argc; // this ends up in a0, the first argument to main(argc, argv)

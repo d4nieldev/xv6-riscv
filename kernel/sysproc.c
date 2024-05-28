@@ -116,6 +116,7 @@ sys_setaffinity(void)
   argint(0, &mask);
   if (mask >= 0) {
     myproc()->affinity_mask = mask;
+    myproc()->effective_affinity_mask = mask;
     return 0;
   }
   return -1;
