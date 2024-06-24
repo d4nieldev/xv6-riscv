@@ -1,6 +1,9 @@
-#include "channel.h"
+#include "types.h"
 #include "param.h"
+#include "memlayout.h"
+#include "riscv.h"
 #include "spinlock.h"
+#include "channel.h"
 #include "defs.h"
 #include "proc.h"
 
@@ -29,6 +32,8 @@ channel_create(void) {
     acquire(&cd_lock);
     for (int cd = 0; cd < NCHANNEL; cd++) {
         if (!channel[cd].occupied) {
+            channel[cd].occupied = 1;
+            release(&cd_lock);
             return cd;
         }
     }
@@ -49,6 +54,7 @@ channel_put(int cd, int data) {
 
     acquire(&c->lock);
     if (!channel[cd].occupied) {
+        release(&c->lock);
         return -1;
     }
 
@@ -57,6 +63,7 @@ channel_put(int cd, int data) {
         sleep(&c->full, &c->lock);
     }
     if (!channel[cd].occupied) {
+        release(&c->lock);
         return -1;
     }
     c->data = data;
@@ -69,7 +76,7 @@ channel_put(int cd, int data) {
 }
 
 int
-channel_take(int cd, int *data) {
+channel_take(int cd, uint64 data) {
     if (cd < 0 || cd >= NCHANNEL)
         return -1;  // invalid channel
     
@@ -81,6 +88,7 @@ channel_take(int cd, int *data) {
 
     acquire(&c->lock);
     if (!channel[cd].occupied) {
+        release(&c->lock);
         return -1;
     }
     if (c->empty) {
@@ -88,9 +96,10 @@ channel_take(int cd, int *data) {
         sleep(&c->empty, &c->lock);
     }
     if (!channel[cd].occupied) {
+        release(&c->lock);
         return -1;
     }
-    copyout(p->pagetable, data, &c->data, sizeof(c->data));  // *data = c->data;
+    copyout(p->pagetable, data, (char*) &c->data, sizeof(c->data));  // *data = c->data;
     c->empty = 1;
     c->full = 0;
     wakeup(&c->full);
@@ -108,6 +117,7 @@ channel_destroy(int cd) {
     
     acquire(&c->lock);
     if (!channel[cd].occupied) {
+        release(&c->lock);
         return -1;
     }
     c->occupied = 0;

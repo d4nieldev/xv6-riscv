@@ -112,7 +112,7 @@ void            procdump(void);
 void            channel_init(void);
 int             channel_create(void);
 int             channel_put(int cd, int data);
-int             channel_take(int cd, int *data);
+int             channel_take(int cd, uint64 data);
 int             channel_destroy(int cd);
 void            destroy_proc_channels(struct proc *p);
 
