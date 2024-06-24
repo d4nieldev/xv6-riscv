@@ -4,23 +4,33 @@
 
 struct channel channel[NCHANNEL];
 
-struct spinlock cid_lock;
+struct spinlock cd_lock;
 
 // initialize the channel table.
 void
 channel_init(void) {
     struct channel *c;
 
-    initlock(&cid_lock, "nextcid");
+    initlock(&cd_lock, "nextcd");
 
     for(c = channel; c < &channel[NCHANNEL]; c++) {
         initlock(&c->lock, "channel");
     }
 }
 
+// create a new channel. 
+// If possible, a channel descriptor is returned. Otherwise, -1.
 int
 channel_create(void) {
-    return -1;
+    acquire(&cd_lock);
+    for (int cd = 0; cd < NCHANNEL; cd++) {
+        if (!channel[cd].valid) {
+            return cd;
+        }
+    }
+    release(&cd_lock);
+
+    return -1;  // all channels are occupied
 }
 
 int
