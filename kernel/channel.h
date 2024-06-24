@@ -3,9 +3,11 @@ struct channel {
 
     struct proc *parent;   // Parent process
 
-    int valid;             // if non-zero, channel contains data
+    int occupied;          // if non-zero, channel contains data
     int data;              // the data
-    int state;             // if non-zero, channel is open for communication
+    
+    int full;              // if non-zero, channel is full
+    int empty;             // if non-zero, channel is empty
 
     // bonus
     // int refcount;         // the number of processes using this channel

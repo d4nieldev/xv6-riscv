@@ -1,6 +1,8 @@
 #include "channel.h"
 #include "param.h"
 #include "spinlock.h"
+#include "defs.h"
+#include "proc.h"
 
 struct channel channel[NCHANNEL];
 
@@ -15,6 +17,8 @@ channel_init(void) {
 
     for(c = channel; c < &channel[NCHANNEL]; c++) {
         initlock(&c->lock, "channel");
+        c->empty = 1;
+        c->full = 0;
     }
 }
 
@@ -24,7 +28,7 @@ int
 channel_create(void) {
     acquire(&cd_lock);
     for (int cd = 0; cd < NCHANNEL; cd++) {
-        if (!channel[cd].valid) {
+        if (!channel[cd].occupied) {
             return cd;
         }
     }
@@ -35,15 +39,81 @@ channel_create(void) {
 
 int
 channel_put(int cd, int data) {
-    return -1;
+    if (cd < 0 || cd >= NCHANNEL)
+        return -1;  // invalid channel
+    
+    struct channel *c = &channel[cd];
+
+    // must aquire &c->lock in case 2 processes are trying
+    // to put at the same time to the same channel.
+
+    acquire(&c->lock);
+    if (!channel[cd].occupied) {
+        return -1;
+    }
+
+    if (c->full) {
+        // channel is full, sleep on the full channel until wakeup
+        sleep(&c->full, &c->lock);
+    }
+    if (!channel[cd].occupied) {
+        return -1;
+    }
+    c->data = data;
+    c->empty = 0;
+    c->full = 1;
+    wakeup(&c->empty);
+    release(&c->lock);
+
+    return 0;
 }
 
 int
 channel_take(int cd, int *data) {
-    return -1;
+    if (cd < 0 || cd >= NCHANNEL)
+        return -1;  // invalid channel
+    
+    struct channel *c = &channel[cd];
+    struct proc *p = myproc();
+
+    // must aquire &c->lock in case 2 processes are trying
+    // to take at the same time to the same channel.
+
+    acquire(&c->lock);
+    if (!channel[cd].occupied) {
+        return -1;
+    }
+    if (c->empty) {
+        // channel is empty, sleep on the empty channel until wakeup
+        sleep(&c->empty, &c->lock);
+    }
+    if (!channel[cd].occupied) {
+        return -1;
+    }
+    copyout(p->pagetable, data, &c->data, sizeof(c->data));  // *data = c->data;
+    c->empty = 1;
+    c->full = 0;
+    wakeup(&c->full);
+    release(&c->lock);
+
+    return 0;
 }
 
 int
 channel_destroy(int cd) {
-    return -1;
+    if (cd < 0 || cd >= NCHANNEL)
+        return -1;  // invalid channel
+
+    struct channel *c = &channel[cd];
+    
+    acquire(&c->lock);
+    if (!channel[cd].occupied) {
+        return -1;
+    }
+    c->occupied = 0;
+    wakeup(&c->empty);
+    wakeup(&c->full);
+    release(&c->lock);
+
+    return 0;
 }
