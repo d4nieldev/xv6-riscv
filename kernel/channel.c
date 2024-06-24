@@ -117,3 +117,12 @@ channel_destroy(int cd) {
 
     return 0;
 }
+
+void
+destroy_proc_channels(struct proc * p) {
+    for (int cd = 0; cd < NCHANNEL; cd++) {
+        struct channel *c = &channel[cd];
+        if (c->parent == p)
+            channel_destroy(cd);
+    }
+}

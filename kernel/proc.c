@@ -360,6 +360,9 @@ exit(int status)
     }
   }
 
+  // Destroy all child channels.
+  destroy_proc_channels(p);
+
   begin_op();
   iput(p->cwd);
   end_op();
@@ -590,6 +593,7 @@ kill(int pid)
   for(p = proc; p < &proc[NPROC]; p++){
     acquire(&p->lock);
     if(p->pid == pid){
+      destroy_proc_channels(p);
       p->killed = 1;
       if(p->state == SLEEPING){
         // Wake process from sleep().
