@@ -42,7 +42,6 @@ void run_system(int num) {
             
             // checker code
             int checker_num = i+1;
-            printf("Checker %d created, pid is %d\n",checker_num, pids[i]);
             int data;
             while(!channel_take(chan1, &data)){
                 // check if prime number
@@ -52,6 +51,7 @@ void run_system(int num) {
             }
             channel_destroy(chan1);
             printf("Checker %d finished, pid is %d\n",checker_num, pids[i]);
+            //printf("C%d\n",checker_num);
             exit(0);
         }
     }
@@ -59,7 +59,6 @@ void run_system(int num) {
     // create printer
     pids[num] = fork();
     if(pids[num] == 0){
-         printf("Printer created, pid is %d.\n",pids[num]);
         // printer code
         int prime_num;
         int counter = 0;
@@ -70,6 +69,7 @@ void run_system(int num) {
         // destroy channels
         channel_destroy(chan2);
         printf("Printer finished, pid is %d, %d prime numbers printed!\n",pids[num], counter);
+        //printf("P\n");
         exit(0);
     }
 

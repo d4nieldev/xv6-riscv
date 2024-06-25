@@ -13,7 +13,7 @@ sys_channel_put(void) {
     int data;
 
     argint(0, &cd);
-    argint(0, &data);
+    argint(1, &data);
 
     return channel_put(cd, data);
 }
@@ -24,7 +24,7 @@ sys_channel_take(void) {
     uint64 data;
 
     argint(0, &cd);
-    argaddr(0, &data);
+    argaddr(1, &data);
 
     return channel_take(cd, data);
 }

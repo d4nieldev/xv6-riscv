@@ -22,6 +22,7 @@ channel_init(void) {
         initlock(&c->lock, "channel");
         c->empty = 1;
         c->full = 0;
+        c->occupied = 0;
     }
 }
 
